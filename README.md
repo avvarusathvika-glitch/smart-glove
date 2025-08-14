@@ -1,2 +1,3 @@
 # smart-glove
 This project presents a Smart Gesture Recognition Glove that detects predefined hand gestures and converts them into text or speech via a mobile application. The glove is embedded with motion and flex sensors that track gestures, process them through a microcontroller, and wirelessly transmit the data to a smartphone. 
+The mobile app matches the gestures with an inbuilt library and provides instant output in multiple languages. This innovative solution aims to bridge communication gaps, enhance inclusivity, and make daily interactions effortless for people with speech or hearing difficulties.
