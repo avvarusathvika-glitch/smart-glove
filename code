@@ -1,0 +1,77 @@
+#include <SoftwareSerial.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+SoftwareSerial Bluetooth(2, 3); 
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+const int flexPin1 = A0;
+const int flexPin2 = A1;
+const int flexPin3 = A2;
+const int threshold1 = 1007; 
+const int threshold2 = 1010;
+const int threshold3 = 1010;
+int flex1Avg = 0, flex2Avg = 0, flex3Avg = 0;
+const float filterFactor = 0.1; 
+String lastMessage = "";
+unsigned long lastSendTime = 0;
+const unsigned long debounceTime = 1500;
+void setup() {
+  Serial.begin(9600);
+  Bluetooth.begin(9600);
+
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Sign Glove Ready");
+  delay(1500);
+  lcd.clear();
+  flex1Avg = analogRead(flexPin1);
+  flex2Avg = analogRead(flexPin2);
+  flex3Avg = analogRead(flexPin3);
+}
+
+void loop() {
+
+  flex1Avg = (1 - filterFactor) * flex1Avg + filterFactor * analogRead(flexPin1);
+  flex2Avg = (1 - filterFactor) * flex2Avg + filterFactor * analogRead(flexPin2);
+  flex3Avg = (1 - filterFactor) * flex3Avg + filterFactor * analogRead(flexPin3);
+
+
+  String message = "";
+
+  if (flex1Avg < threshold1 && flex2Avg < threshold1) {
+    message = "Will you take me to restroom";
+  } 
+  else if (flex1Avg < threshold1) {
+    message = "I need to sit";
+  } 
+  else if (flex2Avg < threshold2) {
+    message = "Please give me food";
+  } 
+  else if (flex3Avg < threshold3) {
+    message = "Please give me water";
+  }
+
+  if (message != "" && (message != lastMessage || millis() - lastSendTime > debounceTime)) {
+    Bluetooth.println(message);
+    Serial.println("Sent: " + message);
+    Serial.print("Flex1: "); Serial.println(flex1Avg);
+    Serial.print("Flex2: "); Serial.println(flex2Avg);
+    Serial.print("Flex3: "); Serial.println(flex3Avg);
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Sent:");
+    lcd.setCursor(0, 1);
+    lcd.print(message);
+
+    lastMessage = message;
+    lastSendTime = millis();
+  } 
+  else if (message == "") {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Waiting...");
+  }
+
+  delay(50);
+}
